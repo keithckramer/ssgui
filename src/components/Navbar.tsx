@@ -1,38 +1,53 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from 'react-router-dom'
+import { routes } from '@/app/routes'
+
+const navLinks = [
+  { to: routes.home, label: 'Home' },
+  { to: routes.matchups, label: 'Matchups' },
+  { to: routes.games, label: 'Boards' },
+  { to: routes.admin, label: 'Admin' },
+]
 
 export default function Navbar() {
+  const location = useLocation()
+
   return (
-    <header className="bg-slate-950 border-b border-slate-800 sticky top-0 z-50">
-      <div className="mx-auto max-w-6xl flex items-center justify-between p-4">
+    <header className="sticky top-0 z-50 border-b border-slate-800 bg-slate-950/95 backdrop-blur">
+      <div className="mx-auto flex max-w-6xl items-center justify-between p-4">
         <div className="flex items-center gap-2">
           <div className="flex flex-col gap-1">
-            <span className="h-1 w-6 bg-blue-600 rounded-full"></span>
-            <span className="h-1 w-4 bg-blue-400 rounded-full"></span>
+            <span className="h-1 w-6 rounded-full bg-blue-600" />
+            <span className="h-1 w-4 rounded-full bg-blue-400" />
           </div>
           <div>
             <div className="font-bold text-white">SSG</div>
-            <div className="text-xs text-slate-400 tracking-wide">SPORTS STICK GAME</div>
+            <div className="text-xs tracking-wide text-slate-400">SPORTS STICK GAME</div>
           </div>
         </div>
 
-        <div className="flex items-center gap-4">
-          <Link to="/"className="px-3 py-1.5 rounded-full bg-slate-800 text-blue-400 font-medium hover:bg-slate-700">
-            Home
-          </Link>
-          <Link to="/matchups" className="px-3 py-1.5 rounded-full hover:bg-slate-800 text-slate-300">
-            Matchups
-          </Link>
-          <Link to="/games" className="px-3 py-1.5 rounded-full hover:bg-slate-800 text-slate-300">
-            Boards
-          </Link>
-          <Link to="/admin" className="px-3 py-1.5 rounded-full hover:bg-slate-800 text-slate-300">
-            Admin
-          </Link>
-          <div className="h-8 w-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm">
-            KK
-          </div>
+        <nav className="flex items-center gap-2">
+          {navLinks.map((link) => {
+            const isActive = location.pathname === link.to
+            return (
+              <Link
+                key={link.to}
+                to={link.to}
+                className={`rounded-full px-3 py-1.5 text-sm font-medium transition ${
+                  isActive
+                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20'
+                    : 'text-slate-300 hover:bg-slate-800'
+                }`}
+              >
+                {link.label}
+              </Link>
+            )
+          })}
+        </nav>
+
+        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-600 text-sm font-bold text-white">
+          KK
         </div>
       </div>
     </header>
-  );
+  )
 }
