@@ -16,20 +16,20 @@ export default function Navbar() {
         </div>
 
         <div className="flex items-center gap-4">
-          <Link
-            to="/"
-            className="px-3 py-1.5 rounded-full bg-slate-800 text-blue-400 font-medium hover:bg-slate-700"
-          >
+          <Link to="/"className="px-3 py-1.5 rounded-full bg-slate-800 text-blue-400 font-medium hover:bg-slate-700">
             Home
           </Link>
-          <Link
-            to="/me"
-            className="px-3 py-1.5 rounded-full hover:bg-slate-800 text-slate-300"
-          >
-            Me
+          <Link to="/matchups" className="px-3 py-1.5 rounded-full hover:bg-slate-800 text-slate-300">
+            Matchups
+          </Link>
+          <Link to="/games" className="px-3 py-1.5 rounded-full hover:bg-slate-800 text-slate-300">
+            Boards
+          </Link>
+          <Link to="/admin" className="px-3 py-1.5 rounded-full hover:bg-slate-800 text-slate-300">
+            Admin
           </Link>
           <div className="h-8 w-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm">
-            TE
+            KK
           </div>
         </div>
       </div>
