@@ -21,9 +21,22 @@ export default function GameRow({ game, onBuy }: GameRowProps) {
       </div>
 
       <div className="flex shrink-0 items-center gap-3">
-        <span className={`rounded-full border px-2 py-1 text-xs font-medium ${statusClasses(game.status)}`}>
+        {/* <button
+          type="button"
+          onClick={() => (canBuy ? onBuy?.(game.id) : undefined)}
+          className={`inline-flex items-center rounded-full px-3 py-1.5 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 ${
+            canBuy
+              ? 'bg-indigo-600 text-white hover:bg-indigo-500'
+              : 'cursor-not-allowed bg-slate-800 text-slate-400'
+          }`}
+          disabled={!canBuy}
+          title={!canBuy ? (game.status === 'FINAL' ? 'Closed' : 'Unavailable') : undefined}
+        >
+          Invite
+        </button> */}
+        {/* <span className={`rounded-full border px-2 py-1 text-xs font-medium ${statusClasses(game.status)}`}>
           {game.status.replace(/_/g, ' ')}
-        </span>
+        </span> */}
 
         <button
           type="button"
