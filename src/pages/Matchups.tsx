@@ -1,8 +1,23 @@
+import { useState } from 'react'
 import MatchupsCard from '@/components/MatchupsCard'
+import BuySticksModal from '@/components/modals/BuySticksModal'
+import type { Game } from '@/entities/game'
 import { useGames } from '@/features/games/useGames'
 
 export default function MatchupsPage() {
   const { publishedGames, loading } = useGames()
+  const [selectedMatchup, setSelectedMatchup] = useState<Game | null>(null)
+  const [isModalOpen, setModalOpen] = useState(false)
+
+  const handleOpenModal = (game: Game) => {
+    setSelectedMatchup(game)
+    setModalOpen(true)
+  }
+
+  const handleCloseModal = () => {
+    setModalOpen(false)
+    setSelectedMatchup(null)
+  }
 
   if (loading) {
     return (
@@ -15,9 +30,13 @@ export default function MatchupsPage() {
   }
 
   return (
-    <div className="flex flex-1 flex-col gap-6">
-      <h1 className="text-3xl font-bold text-white">Matchups</h1>
-      <MatchupsCard games={publishedGames} />
-    </div>
+    <>
+      <div className="flex flex-1 flex-col gap-6">
+        <h1 className="text-3xl font-bold text-white">Matchups</h1>
+        <MatchupsCard games={publishedGames} onBuy={handleOpenModal} />
+      </div>
+
+      <BuySticksModal isOpen={isModalOpen} onClose={handleCloseModal} matchup={selectedMatchup} />
+    </>
   )
 }
