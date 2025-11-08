@@ -393,7 +393,7 @@ export default function BuySticksModal({ isOpen, matchup, onClose }: BuySticksMo
           </form>
         </section>
 
-        <section className="space-y-4 rounded-xl border border-slate-800 bg-slate-800/50 p-5">
+        {/* <section className="space-y-4 rounded-xl border border-slate-800 bg-slate-800/50 p-5">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold text-white">Invite Others</h3>
             <div className="flex rounded-full border border-slate-700 p-1 text-xs text-slate-300">
@@ -486,7 +486,7 @@ export default function BuySticksModal({ isOpen, matchup, onClose }: BuySticksMo
               {inviteLoading ? 'Sending…' : 'Send Invites'}
             </button>
           </div>
-        </section>
+        </section> */}
       </div>
     </div>
   )
