@@ -1,13 +1,15 @@
 import { useEffect, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useLocation, useParams } from 'react-router-dom'
 
 import type { Board } from '@/entities/board'
 import { boardsRepo } from '@/shared/boardsRepo'
 
 export default function BoardPage() {
   const { boardId } = useParams<{ boardId: string }>()
+  const location = useLocation()
   const [board, setBoard] = useState<Board | null>(null)
   const [loading, setLoading] = useState(true)
+  const [ownedIndexes, setOwnedIndexes] = useState<number[]>([])
 
   useEffect(() => {
     if (!boardId) return
@@ -27,6 +29,22 @@ export default function BoardPage() {
       isMounted = false
     }
   }, [boardId])
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search)
+    const owned = params.get('owned')
+    if (!owned) {
+      setOwnedIndexes([])
+      return
+    }
+
+    const indexes = owned
+      .split(',')
+      .map((value) => parseInt(value, 10))
+      .filter((n) => !Number.isNaN(n))
+
+    setOwnedIndexes(indexes)
+  }, [location.search])
 
   if (!boardId) {
     return <div className="text-sm text-red-300">Missing board id in URL.</div>
@@ -63,19 +81,36 @@ export default function BoardPage() {
         </p>
       </header>
 
+      <div className="flex gap-4 text-xs text-slate-400">
+        <div className="flex items-center gap-2">
+          <span className="h-3 w-3 rounded bg-emerald-600" /> Your sticks
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="h-3 w-3 rounded bg-indigo-600" /> Other players
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="h-3 w-3 rounded bg-slate-800" /> Available
+        </div>
+      </div>
+
       <div className="grid grid-cols-10 gap-1 rounded-xl border border-slate-800 bg-slate-900/50 p-3">
-        {board.sticks.map((stick) => (
-          <div
-            key={stick.id}
-            className={`flex h-10 items-center justify-center rounded border text-xs ${
-              stick.owner
-                ? 'border-indigo-400 bg-indigo-600/80 text-white'
-                : 'border-slate-700 bg-slate-900 text-slate-400'
-            }`}
-          >
-            {stick.index + 1}
-          </div>
-        ))}
+        {board.sticks.map((stick) => {
+          const isOwned = ownedIndexes.includes(stick.index)
+          return (
+            <div
+              key={stick.id}
+              className={`flex h-10 items-center justify-center rounded border text-xs ${
+                stick.owner
+                  ? isOwned
+                    ? 'border-emerald-400 bg-emerald-600/90 text-white'
+                    : 'border-indigo-400 bg-indigo-600/80 text-white'
+                  : 'border-slate-700 bg-slate-900 text-slate-400'
+              }`}
+            >
+              {stick.index + 1}
+            </div>
+          )
+        })}
       </div>
     </div>
   )
