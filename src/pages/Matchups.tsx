@@ -40,11 +40,21 @@ export default function MatchupsPage() {
           setBuyOpen(false)
           setSelectedGame(null)
         }}
-        onPurchaseSuccess={(boardId) => {
+        onPurchaseSuccess={(boardId, purchasedStickIndexes) => {
           setBuyOpen(false)
           setSelectedGame(null)
+
           const path = routes.board.replace(':boardId', boardId)
-          navigate(path)
+          const searchParams = new URLSearchParams()
+
+          if (purchasedStickIndexes.length > 0) {
+            searchParams.set('owned', purchasedStickIndexes.join(','))
+          }
+
+          const fullPath =
+            purchasedStickIndexes.length > 0 ? `${path}?${searchParams.toString()}` : path
+
+          navigate(fullPath)
         }}
       />
     </div>
