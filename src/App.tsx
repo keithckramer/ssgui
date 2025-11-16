@@ -1,13 +1,15 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
+
 import Layout from '@/app/Layout'
 import Protected from '@/app/Protected'
 import { routes } from '@/app/routes'
 import { GamesProvider } from '@/features/games/useGames'
+import Admin from '@/pages/Admin'
+import BoardPage from '@/pages/BoardPage'
+import Games from '@/pages/Games'
 import Home from '@/pages/Home'
 import Login from '@/pages/Login'
 import Matchups from '@/pages/Matchups'
-import Games from '@/pages/Games'
-import Admin from '@/pages/Admin'
 import NotFound from '@/pages/NotFound'
 
 function App() {
@@ -28,6 +30,7 @@ function App() {
             />
             <Route path={routes.login} element={<Login />} />
             <Route path={routes.admin} element={<Admin />} />
+            <Route path={routes.board} element={<BoardPage />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
