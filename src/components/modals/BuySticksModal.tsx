@@ -16,6 +16,17 @@ interface BuySticksModalProps {
 
 type InviteTab = 'digital' | 'local'
 
+interface ValidatedLocalPlayerEntry {
+  state: LocalPlayerRowState
+  valid: boolean
+  normalized: LocalPlayer | null
+}
+
+const isValidNormalizedEntry = (
+  entry: ValidatedLocalPlayerEntry,
+): entry is ValidatedLocalPlayerEntry & { valid: true; normalized: LocalPlayer } =>
+  Boolean(entry.valid && entry.normalized)
+
 const focusableSelectors = [
   'a[href]',
   'button:not([disabled])',
@@ -205,7 +216,7 @@ export default function BuySticksModal({ isOpen, matchup, onClose }: BuySticksMo
     setInviteError(null)
     setInviteMessage(null)
 
-    const validatedPlayers = localPlayers.map((player) => {
+    const validatedPlayers: ValidatedLocalPlayerEntry[] = localPlayers.map((player) => {
       const { valid, errors, normalized } = validateLocalPlayer(player)
       return {
         state: { ...player, errors },
@@ -219,7 +230,7 @@ export default function BuySticksModal({ isOpen, matchup, onClose }: BuySticksMo
 
     const validTargets = chips.filter((chip) => chip.target && !chip.error).map((chip) => chip.target!)
     const validLocalPlayers: LocalPlayer[] = validatedPlayers
-      .filter((entry): entry is { valid: true; normalized: LocalPlayer } => Boolean(entry.valid && entry.normalized))
+      .filter(isValidNormalizedEntry)
       .map((entry) => entry.normalized)
 
     const inviteRequest: InviteRequest = {
