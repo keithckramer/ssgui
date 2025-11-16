@@ -1,12 +1,12 @@
 import { useState } from 'react'
 import type { Game } from '@/entities/game'
-import { boardsRepo } from '@/shared/boardsRepo'
+import { boardsRepo, type StickPurchase } from '@/shared/boardsRepo'
 
 interface BuySticksModalProps {
   isOpen: boolean
   game: Game | null
   onClose(): void
-  onPurchaseSuccess(boardId: string, purchasedStickIndexes: number[]): void
+  onPurchaseSuccess(purchases: StickPurchase[]): void
 }
 
 export default function BuySticksModal({
@@ -19,6 +19,7 @@ export default function BuySticksModal({
   const [quantity, setQuantity] = useState(1)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [separateBoards, setSeparateBoards] = useState(false)
 
   if (!isOpen || !game) {
     return null
@@ -41,8 +42,12 @@ export default function BuySticksModal({
 
     try {
       setLoading(true)
-      const result = await boardsRepo.buySticksForGame(game.id, trimmedName, quantity)
-      onPurchaseSuccess(result.board.id, result.purchasedStickIndexes)
+      const result = await boardsRepo.buySticksForGame(game.id, trimmedName, quantity, {
+        separateBoards,
+      })
+
+      // result.purchases: array of { boardId, boardNumber, digit, owner }
+      onPurchaseSuccess(result.purchases)
     } catch (err) {
       console.error(err)
       setError('Unable to complete purchase. Please try again.')
@@ -139,6 +144,21 @@ export default function BuySticksModal({
                 +
               </button>
             </div>
+
+            {quantity > 1 && (
+              <label className="mt-2 flex items-center gap-2 text-xs text-slate-300">
+                <input
+                  type="checkbox"
+                  className="h-4 w-4 rounded border-slate-600 bg-slate-900 text-indigo-500 focus:ring-indigo-500"
+                  checked={separateBoards}
+                  disabled={loading}
+                  onChange={(event) => setSeparateBoards(event.target.checked)}
+                />
+                <span>
+                  Place each stick on a <span className="font-semibold">separate board</span> for this game
+                </span>
+              </label>
+            )}
           </div>
 
           {error && (
