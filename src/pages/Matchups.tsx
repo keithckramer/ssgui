@@ -1,21 +1,38 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 
-import { routes } from '@/app/routes'
 import MatchupsCard from '@/components/MatchupsCard'
 import type { Game } from '@/entities/game'
 import BuySticksModal from '@/features/buy/BuySticksModal'
 import { useGames } from '@/features/games/useGames'
+import { boardsRepo, type StickPurchase } from '@/shared/boardsRepo'
+
+void boardsRepo
 
 export default function MatchupsPage() {
   const { publishedGames, loading } = useGames()
+  const [expandedGameId, setExpandedGameId] = useState<string | null>(null)
   const [selectedGame, setSelectedGame] = useState<Game | null>(null)
   const [buyOpen, setBuyOpen] = useState(false)
-  const navigate = useNavigate()
+  const [recentPurchases, setRecentPurchases] = useState<StickPurchase[] | null>(null)
 
   const handleOpenBuy = (game: Game) => {
     setSelectedGame(game)
     setBuyOpen(true)
+  }
+
+  const handleToggleExpand = (gameId: string) => {
+    setExpandedGameId((current) => (current === gameId ? null : gameId))
+  }
+
+  const handlePurchaseSuccess = (purchases: StickPurchase[]) => {
+    setRecentPurchases(purchases)
+
+    if (selectedGame) {
+      setExpandedGameId(selectedGame.id)
+    }
+
+    setBuyOpen(false)
+    setSelectedGame(null)
   }
 
   if (loading) {
@@ -31,7 +48,13 @@ export default function MatchupsPage() {
   return (
     <div className="flex flex-1 flex-col gap-6">
       <h1 className="text-3xl font-bold text-white">Matchups</h1>
-      <MatchupsCard games={publishedGames} onBuy={handleOpenBuy} />
+      <MatchupsCard
+        games={publishedGames}
+        onBuy={handleOpenBuy}
+        expandedGameId={expandedGameId}
+        onToggleExpand={handleToggleExpand}
+        refreshTrigger={recentPurchases}
+      />
 
       <BuySticksModal
         isOpen={buyOpen}
@@ -40,22 +63,7 @@ export default function MatchupsPage() {
           setBuyOpen(false)
           setSelectedGame(null)
         }}
-        onPurchaseSuccess={(boardId, purchasedStickIndexes) => {
-          setBuyOpen(false)
-          setSelectedGame(null)
-
-          const path = routes.board.replace(':boardId', boardId)
-          const searchParams = new URLSearchParams()
-
-          if (purchasedStickIndexes.length > 0) {
-            searchParams.set('owned', purchasedStickIndexes.join(','))
-          }
-
-          const fullPath =
-            purchasedStickIndexes.length > 0 ? `${path}?${searchParams.toString()}` : path
-
-          navigate(fullPath)
-        }}
+        onPurchaseSuccess={handlePurchaseSuccess}
       />
     </div>
   )
