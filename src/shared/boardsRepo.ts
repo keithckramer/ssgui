@@ -111,7 +111,9 @@ function allocateSingleStickToBoard(
     return null
   }
 
-  const stick = available[0]
+  // Pick a random available stick (digit) instead of always taking the first
+  const randomIndex = Math.floor(Math.random() * available.length)
+  const stick = available[randomIndex]
   stick.owner = owner
   board.updatedAt = now
 
@@ -170,28 +172,14 @@ async function buySticksForGame(
             b.sticks.some((stick) => !stick.owner),
         ) ?? createBoardForGame(gameId, boards)
 
-      const now = new Date().toISOString()
-      let available = board.sticks.filter((stick) => !stick.owner)
+      const purchase = allocateSingleStickToBoard(board, owner)
 
-      while (available.length > 0 && remaining > 0) {
-        const stick = available[0]
-        stick.owner = owner
-        board.updatedAt = now
-
-        purchases.push({
-          boardId: board.id,
-          boardNumber: board.boardNumber,
-          digit: stick.digit,
-          owner,
-        })
-
+      if (purchase) {
+        purchases.push(purchase)
         remaining -= 1
-        available = board.sticks.filter((s) => !s.owner)
-      }
-
-      if (isBoardFull(board)) {
-        board.status = 'FULL'
-        board.updatedAt = now
+      } else {
+        // Board is full; loop will find or create the next OPEN board
+        continue
       }
     }
   } else {
