@@ -1,17 +1,26 @@
-import type { Board } from '@/entities/board'
-import { createEmptyBoard } from '@/entities/board'
+import type { Board, BoardDigit, StickOwner } from '@/entities/board'
+import { BOARD_DIGITS, createEmptyBoard, isBoardFull } from '@/entities/board'
 
-const STORAGE_KEY = 'ssg.boards'
+const STORAGE_KEY = 'ssg.boards.v2'
 
 const isBrowser = typeof window !== 'undefined' && typeof window.localStorage !== 'undefined'
+
+function generateId(prefix: string): string {
+  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
+    return `${prefix}_${crypto.randomUUID()}`
+  }
+  return `${prefix}_${Math.random().toString(36).slice(2, 11)}`
+}
 
 function readBoards(): Board[] {
   if (!isBrowser) return []
   const raw = window.localStorage.getItem(STORAGE_KEY)
   if (!raw) return []
+
   try {
     const parsed = JSON.parse(raw) as Board[]
-    return Array.isArray(parsed) ? parsed : []
+    if (!Array.isArray(parsed)) return []
+    return parsed
   } catch {
     return []
   }
@@ -30,81 +39,198 @@ async function getById(id: string): Promise<Board | undefined> {
   return readBoards().find((board) => board.id === id)
 }
 
-async function getByGameId(gameId: string): Promise<Board | undefined> {
-  return readBoards().find((board) => board.gameId === gameId)
+async function getBoardsForGame(gameId: string): Promise<Board[]> {
+  return readBoards()
+    .filter((board) => board.gameId === gameId)
+    .sort((a, b) => a.boardNumber - b.boardNumber)
 }
 
-async function save(board: Board): Promise<Board> {
-  const boards = readBoards()
-  const index = boards.findIndex((b) => b.id === board.id)
-  const next = [...boards]
+/**
+ * Get all boards where at least one stick owner has the given name.
+ * This is a simple way to power "My Boards" based on a display name.
+ */
+async function getBoardsForOwnerName(ownerName: string): Promise<Board[]> {
+  const normalized = ownerName.trim().toLowerCase()
+  if (!normalized) return []
 
-  if (index === -1) {
-    next.push(board)
-  } else {
-    next[index] = board
-  }
+  return readBoards().filter((board) =>
+    board.sticks.some((stick) => stick.owner && stick.owner.name.trim().toLowerCase() === normalized),
+  )
+}
 
-  writeBoards(next)
+function getNextBoardNumberForGame(gameId: string, boards: Board[]): number {
+  const gameBoards = boards.filter((board) => board.gameId === gameId)
+  if (gameBoards.length === 0) return 1
+  const max = Math.max(...gameBoards.map((b) => b.boardNumber))
+  return max + 1
+}
+
+function createBoardForGame(gameId: string, boards: Board[]): Board {
+  const id = generateId('board')
+  const boardNumber = getNextBoardNumberForGame(gameId, boards)
+  const board = createEmptyBoard({ id, gameId, boardNumber })
+  boards.push(board)
   return board
 }
 
-async function createForGame(gameId: string, title: string, size = 100): Promise<Board> {
-  const board = createEmptyBoard(gameId, title, size)
-  return save(board)
+function saveBoards(boards: Board[]): void {
+  writeBoards(boards)
+}
+
+interface StickPurchase {
+  boardId: string
+  boardNumber: number
+  digit: BoardDigit
+  owner: StickOwner
+}
+
+interface BuySticksOptions {
+  /** If true, try to put each stick on a different board. If false, pack into as few boards as possible. */
+  separateBoards?: boolean
 }
 
 interface BuySticksResult {
-  board: Board
-  purchasedStickIndexes: number[]
+  purchases: StickPurchase[]
+  boards: Board[] // updated boards snapshot
 }
 
+/**
+ * Allocate a single stick to a board for a given buyer.
+ * Caller is responsible for persisting boards afterward.
+ */
+function allocateSingleStickToBoard(
+  board: Board,
+  owner: StickOwner,
+): StickPurchase | null {
+  const now = new Date().toISOString()
+  const available = board.sticks.filter((stick) => !stick.owner)
+
+  if (available.length === 0) {
+    board.status = 'FULL'
+    board.updatedAt = now
+    return null
+  }
+
+  const stick = available[0]
+  stick.owner = owner
+  board.updatedAt = now
+
+  if (isBoardFull(board)) {
+    board.status = 'FULL'
+  }
+
+  return {
+    boardId: board.id,
+    boardNumber: board.boardNumber,
+    digit: stick.digit,
+    owner,
+  }
+}
+
+/**
+ * Core purchase function.
+ *
+ * - If separateBoards is false (default):
+ *   - Packs sticks into as few boards as possible, filling boards before creating new ones.
+ *
+ * - If separateBoards is true:
+ *   - Tries to add at most one new stick per board for this purchase, creating new boards as needed.
+ */
 async function buySticksForGame(
   gameId: string,
   buyerName: string,
   quantity: number,
+  options: BuySticksOptions = {},
 ): Promise<BuySticksResult> {
-  if (quantity <= 0) {
+  const trimmedName = buyerName.trim()
+  if (!trimmedName) {
+    return Promise.reject(new Error('Buyer name is required'))
+  }
+  if (!Number.isFinite(quantity) || quantity <= 0) {
     return Promise.reject(new Error('Quantity must be greater than zero'))
   }
 
-  const allBoards = readBoards()
-  let board = allBoards.find((b) => b.gameId === gameId)
+  const separateBoards = options.separateBoards === true
+  const owner: StickOwner = { name: trimmedName }
 
-  if (!board) {
-    board = createEmptyBoard(gameId, `Board for game ${gameId}`)
-    allBoards.push(board)
+  const boards = readBoards()
+  const purchases: StickPurchase[] = []
+
+  if (!separateBoards) {
+    // Pack into as few boards as possible
+    let remaining = quantity
+
+    while (remaining > 0) {
+      // Prefer existing OPEN boards for this game with free sticks
+      let board =
+        boards.find(
+          (b) =>
+            b.gameId === gameId &&
+            b.status === 'OPEN' &&
+            b.sticks.some((stick) => !stick.owner),
+        ) ?? createBoardForGame(gameId, boards)
+
+      const now = new Date().toISOString()
+      let available = board.sticks.filter((stick) => !stick.owner)
+
+      while (available.length > 0 && remaining > 0) {
+        const stick = available[0]
+        stick.owner = owner
+        board.updatedAt = now
+
+        purchases.push({
+          boardId: board.id,
+          boardNumber: board.boardNumber,
+          digit: stick.digit,
+          owner,
+        })
+
+        remaining -= 1
+        available = board.sticks.filter((s) => !s.owner)
+      }
+
+      if (isBoardFull(board)) {
+        board.status = 'FULL'
+        board.updatedAt = now
+      }
+    }
+  } else {
+    // SeparateBoards: try to put each new stick on a different board in this purchase
+    const usedBoardIdsThisPurchase = new Set<string>()
+
+    for (let i = 0; i < quantity; i++) {
+      // Find an OPEN board for this game that:
+      // - has a free stick
+      // - we haven't already used in this purchase iteration
+      let board =
+        boards.find(
+          (b) =>
+            b.gameId === gameId &&
+            b.status === 'OPEN' &&
+            !usedBoardIdsThisPurchase.has(b.id) &&
+            b.sticks.some((stick) => !stick.owner),
+        ) ?? createBoardForGame(gameId, boards)
+
+      const purchase = allocateSingleStickToBoard(board, owner)
+      if (purchase) {
+        purchases.push(purchase)
+        usedBoardIdsThisPurchase.add(board.id)
+      }
+    }
   }
 
-  const availableSticks = board.sticks.filter((s) => !s.owner)
-  if (availableSticks.length === 0) {
-    return Promise.reject(new Error('No sticks available on this board'))
+  saveBoards(boards)
+
+  return {
+    purchases,
+    boards,
   }
-
-  const takeCount = Math.min(quantity, availableSticks.length)
-  const purchasedStickIndexes: number[] = []
-
-  for (let i = 0; i < takeCount; i++) {
-    const stick = availableSticks[i]
-    if (!stick) continue
-    stick.owner = { name: buyerName }
-    purchasedStickIndexes.push(stick.index)
-  }
-
-  board.updatedAt = new Date().toISOString()
-
-  const idx = allBoards.findIndex((b) => b.id === board!.id)
-  allBoards[idx] = board
-  writeBoards(allBoards)
-
-  return { board, purchasedStickIndexes }
 }
 
 export const boardsRepo = {
   getAll,
   getById,
-  getByGameId,
-  save,
-  createForGame,
+  getBoardsForGame,
+  getBoardsForOwnerName,
   buySticksForGame,
 }
