@@ -67,7 +67,7 @@ const seedGames = (): Game[] => {
       awayTeam: 'Buffalo Bills',
       eventDateTime: future(24),
       venue: 'MetLife Stadium',
-      stickPrice: 5,
+      stickPrice: 10,
       status: 'PUBLISHED',
       isPublished: true,
       createdAt: base,
@@ -121,7 +121,7 @@ export const gamesRepo: GamesRepo = {
     const timestamp = nowIso()
     const game: Game = {
       ...input,
-      stickPrice: typeof input.stickPrice === 'number' ? input.stickPrice : 5,
+      stickPrice: typeof input.stickPrice === 'number' ? input.stickPrice : 10,
       id: generateId(),
       createdAt: timestamp,
       updatedAt: timestamp,
@@ -147,7 +147,7 @@ export const gamesRepo: GamesRepo = {
           ? patch.stickPrice
           : typeof games[index].stickPrice === 'number'
             ? games[index].stickPrice
-            : 5,
+            : 10,
       id,
       updatedAt: nowIso(),
     }

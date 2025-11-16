@@ -44,7 +44,7 @@ export default function BuySticksModal({ isOpen, matchup, onClose }: BuySticksMo
   const containerRef = useRef<HTMLDivElement | null>(null)
 
   const isBusy = purchaseLoading || inviteLoading
-  const pricePerStick = matchup?.stickPrice ?? 5
+  const pricePerStick = matchup?.stickPrice ?? 10
   const total = useMemo(() => quantity * pricePerStick, [quantity, pricePerStick])
 
   useEffect(() => {
