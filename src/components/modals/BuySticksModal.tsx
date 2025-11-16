@@ -219,8 +219,8 @@ export default function BuySticksModal({ isOpen, matchup, onClose }: BuySticksMo
 
     const validTargets = chips.filter((chip) => chip.target && !chip.error).map((chip) => chip.target!)
     const validLocalPlayers: LocalPlayer[] = validatedPlayers
-      .filter((entry): entry is { valid: true; normalized: LocalPlayer } => Boolean(entry.valid && entry.normalized))
-      .map((entry) => entry.normalized)
+      .filter((entry) => entry.valid && entry.normalized)
+      .map((entry) => entry.normalized!);
 
     const inviteRequest: InviteRequest = {
       matchupId: matchup.id,
