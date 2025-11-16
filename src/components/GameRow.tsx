@@ -2,7 +2,7 @@ import type { Game } from '@/entities/game'
 
 interface GameRowProps {
   game: Game
-  onBuy?(gameId: string): void
+  onBuy?(game: Game): void
 }
 
 export default function GameRow({ game, onBuy }: GameRowProps) {
@@ -34,39 +34,18 @@ export default function GameRow({ game, onBuy }: GameRowProps) {
         >
           Invite
         </button> */}
-        {/* <span className={`rounded-full border px-2 py-1 text-xs font-medium ${statusClasses(game.status)}`}>
-          {game.status.replace(/_/g, ' ')}
-        </span> */}
-
-        <button
-          type="button"
-          onClick={() => (canBuy ? onBuy?.(game.id) : undefined)}
-          className={`inline-flex items-center rounded-full px-3 py-1.5 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 ${
-            canBuy
-              ? 'bg-indigo-600 text-white hover:bg-indigo-500'
-              : 'cursor-not-allowed bg-slate-800 text-slate-400'
-          }`}
-          disabled={!canBuy}
-          title={!canBuy ? (game.status === 'FINAL' ? 'Closed' : 'Unavailable') : undefined}
-        >
-          Buy Sticks
-        </button>
+        {canBuy && onBuy && (
+          <button
+            type="button"
+            onClick={() => onBuy(game)}
+            className="inline-flex items-center justify-center rounded-full bg-indigo-600 px-4 py-2 text-xs font-semibold text-white transition hover:bg-indigo-500"
+          >
+            Buy
+          </button>
+        )}
       </div>
     </li>
   )
-}
-
-function statusClasses(status: Game['status']) {
-  switch (status) {
-    case 'PUBLISHED':
-      return 'border-emerald-700/40 bg-emerald-900/30 text-emerald-300'
-    case 'IN_PROGRESS':
-      return 'border-amber-700/40 bg-amber-900/30 text-amber-300'
-    case 'FINAL':
-      return 'border-slate-700 bg-slate-800 text-slate-400'
-    default:
-      return 'border-slate-700/70 bg-slate-800/80 text-slate-300'
-  }
 }
 
 function formatDateTime(iso: string) {
