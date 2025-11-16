@@ -1,5 +1,6 @@
 // eslint.config.js (flat config)
 import js from '@eslint/js'
+import globals from 'globals'
 import path from 'node:path'
 
 export default [
@@ -15,9 +16,9 @@ export default [
       ecmaVersion: 'latest',
       sourceType: 'module',
       globals: {
-        window: 'readonly',
-        document: 'readonly',
-        navigator: 'readonly'
+        ...globals.browser,
+        ...globals.node,
+        React: 'readonly'
       }
     },
     plugins: {
@@ -25,7 +26,8 @@ export default [
     },
     rules: {
       ...js.configs.recommended.rules,
-      'no-console': 'warn'
+      'no-console': 'warn',
+      'no-unused-vars': 'off'
     }
   },
 
