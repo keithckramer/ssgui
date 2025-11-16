@@ -1,10 +1,11 @@
 import { useMemo } from 'react'
-import type { Game } from '@/entities/game'
+
 import GameRow from '@/components/GameRow'
+import type { Game } from '@/entities/game'
 
 interface MatchupsCardProps {
   games: Game[]
-  onBuy?(gameId: string): void
+  onBuy?(game: Game): void
 }
 
 export default function MatchupsCard({ games, onBuy }: MatchupsCardProps) {
