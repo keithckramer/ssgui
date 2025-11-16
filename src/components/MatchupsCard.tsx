@@ -4,7 +4,7 @@ import GameRow from '@/components/GameRow'
 
 interface MatchupsCardProps {
   games: Game[]
-  onBuy?(gameId: string): void
+  onBuy?(game: Game): void
 }
 
 export default function MatchupsCard({ games, onBuy }: MatchupsCardProps) {

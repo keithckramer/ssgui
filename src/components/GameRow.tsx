@@ -2,7 +2,7 @@ import type { Game } from '@/entities/game'
 
 interface GameRowProps {
   game: Game
-  onBuy?(gameId: string): void
+  onBuy?(game: Game): void
 }
 
 export default function GameRow({ game, onBuy }: GameRowProps) {
@@ -40,7 +40,7 @@ export default function GameRow({ game, onBuy }: GameRowProps) {
 
         <button
           type="button"
-          onClick={() => (canBuy ? onBuy?.(game.id) : undefined)}
+          onClick={() => (canBuy ? onBuy?.(game) : undefined)}
           className={`inline-flex items-center rounded-full px-3 py-1.5 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 ${
             canBuy
               ? 'bg-indigo-600 text-white hover:bg-indigo-500'

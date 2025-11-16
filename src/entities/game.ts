@@ -9,6 +9,7 @@ export interface Game {
   awayTeam: string
   eventDateTime: string
   venue?: string
+  stickPrice: number
   status: GameStatus
   isPublished: boolean
   homeScore?: number
