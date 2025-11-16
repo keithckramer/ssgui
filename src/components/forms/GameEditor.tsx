@@ -44,6 +44,7 @@ export default function GameEditor({
     awayTeam: initialValue?.awayTeam ?? '',
     eventDateTime: initialValue?.eventDateTime ?? new Date().toISOString(),
     venue: initialValue?.venue ?? '',
+    stickPrice: initialValue?.stickPrice ?? 10,
     status: initialValue?.status ?? 'DRAFT',
     isPublished: initialValue?.isPublished ?? false,
     homeScore: initialValue?.homeScore,
@@ -62,6 +63,7 @@ export default function GameEditor({
       awayTeam: initialValue.awayTeam ?? '',
       eventDateTime: initialValue.eventDateTime ?? new Date().toISOString(),
       venue: initialValue.venue ?? '',
+      stickPrice: initialValue.stickPrice ?? 10,
       status: initialValue.status ?? 'DRAFT',
       isPublished: initialValue.isPublished ?? false,
       homeScore: initialValue.homeScore,
@@ -78,6 +80,11 @@ export default function GameEditor({
     if (!formState.homeTeam.trim()) nextErrors.homeTeam = 'Home team is required'
     if (!formState.awayTeam.trim()) nextErrors.awayTeam = 'Away team is required'
     if (!formState.eventDateTime) nextErrors.eventDateTime = 'Date and time are required'
+    if (typeof formState.stickPrice !== 'number' || Number.isNaN(formState.stickPrice)) {
+      nextErrors.stickPrice = 'Stick price is required'
+    } else if (formState.stickPrice <= 0) {
+      nextErrors.stickPrice = 'Stick price must be greater than zero'
+    }
     if (isFinal) {
       if (typeof formState.homeScore !== 'number') nextErrors.homeScore = 'Home score is required'
       if (typeof formState.awayScore !== 'number') nextErrors.awayScore = 'Away score is required'
@@ -110,6 +117,11 @@ export default function GameEditor({
   const handleNumericChange = (key: keyof Pick<GameEditorValues, 'homeScore' | 'awayScore' | 'winningNumber'>, value: string) => {
     const parsed = Number.parseInt(value, 10)
     handleChange(key, Number.isNaN(parsed) ? undefined : parsed)
+  }
+
+  const handlePriceChange = (value: string) => {
+    const parsed = Number.parseFloat(value)
+    handleChange('stickPrice', Number.isNaN(parsed) ? undefined : parsed)
   }
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -197,6 +209,23 @@ export default function GameEditor({
             disabled={disabled}
           />
           {errors.awayTeam ? <p className="text-xs text-red-400">{errors.awayTeam}</p> : null}
+        </div>
+
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-slate-300" htmlFor="stickPrice">
+            Stick Price ($)
+          </label>
+          <input
+            id="stickPrice"
+            type="number"
+            min={1}
+            step={0.5}
+            className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none"
+            value={formState.stickPrice ?? ''}
+            onChange={(event) => handlePriceChange(event.target.value)}
+            disabled={disabled}
+          />
+          {errors.stickPrice ? <p className="text-xs text-red-400">{errors.stickPrice}</p> : null}
         </div>
 
         <div className="space-y-2">

@@ -34,6 +34,7 @@ const readGames = (): Game[] => {
 
     return parsed.map((game) => ({
       ...game,
+      stickPrice: typeof game.stickPrice === 'number' ? game.stickPrice : 10,
       createdAt: game.createdAt ?? nowIso(),
       updatedAt: game.updatedAt ?? nowIso(),
     }))
@@ -66,6 +67,7 @@ const seedGames = (): Game[] => {
       awayTeam: 'Buffalo Bills',
       eventDateTime: future(24),
       venue: 'MetLife Stadium',
+      stickPrice: 10,
       status: 'PUBLISHED',
       isPublished: true,
       createdAt: base,
@@ -79,6 +81,7 @@ const seedGames = (): Game[] => {
       awayTeam: 'Golden State Warriors',
       eventDateTime: future(48),
       venue: 'Crypto.com Arena',
+      stickPrice: 7,
       status: 'PUBLISHED',
       isPublished: true,
       createdAt: base,
@@ -92,6 +95,7 @@ const seedGames = (): Game[] => {
       awayTeam: 'Boston Bruins',
       eventDateTime: future(72),
       venue: 'Scotiabank Arena',
+      stickPrice: 6,
       status: 'DRAFT',
       isPublished: false,
       createdAt: base,
@@ -117,6 +121,7 @@ export const gamesRepo: GamesRepo = {
     const timestamp = nowIso()
     const game: Game = {
       ...input,
+      stickPrice: typeof input.stickPrice === 'number' ? input.stickPrice : 10,
       id: generateId(),
       createdAt: timestamp,
       updatedAt: timestamp,
@@ -137,6 +142,12 @@ export const gamesRepo: GamesRepo = {
     const updated: Game = {
       ...games[index],
       ...patch,
+      stickPrice:
+        typeof patch.stickPrice === 'number'
+          ? patch.stickPrice
+          : typeof games[index].stickPrice === 'number'
+            ? games[index].stickPrice
+            : 10,
       id,
       updatedAt: nowIso(),
     }
