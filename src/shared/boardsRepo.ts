@@ -77,7 +77,7 @@ function saveBoards(boards: Board[]): void {
   writeBoards(boards)
 }
 
-interface StickPurchase {
+export interface StickPurchase {
   boardId: string
   boardNumber: number
   digit: BoardDigit
@@ -89,7 +89,7 @@ interface BuySticksOptions {
   separateBoards?: boolean
 }
 
-interface BuySticksResult {
+export interface BuySticksResult {
   purchases: StickPurchase[]
   boards: Board[] // updated boards snapshot
 }
