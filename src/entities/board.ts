@@ -17,10 +17,10 @@ export type BoardDigit = (typeof BOARD_DIGITS)[number]
 export type BoardStatus = 'OPEN' | 'FULL' | 'CLOSED'
 
 export interface StickOwner {
+  /** Identifier of the user who owns this stick */
+  playerId: string
   /** Display name of the person who owns this stick (from the Buy flow) */
   name: string
-  /** Optional identifier for the owner, for when we add real accounts later */
-  playerId?: string
 }
 
 export interface Stick {

@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
 
+import { useAuth } from '@/app/AuthContext'
 import type { Board } from '@/entities/board'
 import type { Game } from '@/entities/game'
 import { boardsRepo } from '@/shared/boardsRepo'
-import { gamesRepo } from '@/shared/gamesRepo'
 import { getBoardWinner } from '@/shared/boardWinners'
+import { gamesRepo } from '@/shared/gamesRepo'
 import { getEffectiveGameStatus } from '@/shared/gameStatus'
-import { getStoredPlayerName, setStoredPlayerName } from '@/shared/playerProfile'
 
 interface GameBoardsGroup {
   game: Game
@@ -14,43 +14,39 @@ interface GameBoardsGroup {
 }
 
 export default function Games() {
-  const [playerName, setPlayerName] = useState('')
+  const { user } = useAuth()
   const [loading, setLoading] = useState(true)
   const [groups, setGroups] = useState<GameBoardsGroup[]>([])
   const [expandedGameId, setExpandedGameId] = useState<string | null>(null)
+  const normalizedPlayerId = useMemo(() => user?.id ?? null, [user])
 
-  // Load stored player name on mount
   useEffect(() => {
-    const stored = getStoredPlayerName()
-    if (stored) {
-      setPlayerName(stored)
-    } else {
-      setLoading(false)
-    }
-  }, [])
-
-  // Load boards whenever playerName changes
-  useEffect(() => {
-    const activeName = playerName.trim()
-    if (!activeName) {
-      setGroups([])
-      return
-    }
-
     let cancelled = false
 
     const load = async () => {
+      if (!normalizedPlayerId) {
+        setGroups([])
+        setLoading(false)
+        return
+      }
+
       setLoading(true)
       try {
         const [games, boards] = await Promise.all([
           gamesRepo.getAll(),
-          boardsRepo.getBoardsForOwnerName(activeName),
+          boardsRepo.getAll(),
         ])
 
         if (cancelled) return
 
+        const playerBoards = boards.filter((board) =>
+          board.sticks.some(
+            (stick) => stick.owner && stick.owner.playerId === normalizedPlayerId,
+          ),
+        )
+
         const boardsByGameId = new Map<string, Board[]>()
-        for (const board of boards) {
+        for (const board of playerBoards) {
           if (!boardsByGameId.has(board.gameId)) {
             boardsByGameId.set(board.gameId, [])
           }
@@ -73,9 +69,9 @@ export default function Games() {
         setGroups(grouped)
 
         // Keep expanded game if still present; otherwise clear
-        if (expandedGameId && !boardsByGameId.has(expandedGameId)) {
-          setExpandedGameId(null)
-        }
+        setExpandedGameId((current) =>
+          current && boardsByGameId.has(current) ? current : null,
+        )
       } finally {
         if (!cancelled) {
           setLoading(false)
@@ -88,20 +84,9 @@ export default function Games() {
     return () => {
       cancelled = true
     }
-  }, [playerName]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [normalizedPlayerId])
 
-  const normalizedPlayerName = useMemo(
-    () => playerName.trim().toLowerCase(),
-    [playerName],
-  )
-
-  const handlePlayerNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const value = event.target.value
-    setPlayerName(value)
-    setStoredPlayerName(value)
-  }
-
-  if (loading && !playerName) {
+  if (loading && !normalizedPlayerId) {
     return (
       <div className="flex h-full items-center justify-center">
         <div className="animate-pulse rounded-2xl border border-slate-800 bg-slate-900/70 px-6 py-3 text-slate-300">
@@ -116,45 +101,37 @@ export default function Games() {
       <header className="space-y-3">
         <h1 className="text-3xl font-bold text-white">My Boards</h1>
         <p className="text-sm text-slate-400">
-          See matchups where you have at least one stick. We&apos;re using your name as your
-          player identity for now.
+          See matchups where you have at least one stick tied to your logged-in profile.
         </p>
 
         <div className="flex flex-wrap items-center gap-3 rounded-xl border border-slate-800 bg-slate-900/70 px-4 py-3">
-          <label className="flex flex-1 min-w-[220px] flex-col text-xs font-semibold uppercase tracking-wide text-slate-400">
-            Your name
-            <input
-              type="text"
-              className="mt-1 rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-white focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-              placeholder="Enter the same name you use when buying sticks"
-              value={playerName}
-              onChange={handlePlayerNameChange}
-            />
-          </label>
+          <div className="flex flex-1 min-w-[220px] flex-col">
+            <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">Signed in as</span>
+            <span className="mt-1 text-sm text-white">{user ? user.name : 'Not logged in'}</span>
+          </div>
           <div className="text-xs text-slate-400">
-            This is stored only in your browser. Use the exact same name in the purchase modal to
-            see your boards here.
+            Boards are linked to the account you use when buying sticks. Log in to view your sticks here.
           </div>
         </div>
       </header>
 
-      {loading && playerName.trim() ? (
+      {loading && normalizedPlayerId ? (
         <div className="rounded-2xl border border-slate-800 bg-slate-900/70 px-4 py-3 text-sm text-slate-300">
-          Loading boards for <span className="font-semibold text-white">{playerName.trim()}</span>…
+          Loading boards for <span className="font-semibold text-white">{user?.name}</span>…
         </div>
       ) : null}
 
-      {!loading && playerName.trim() && groups.length === 0 ? (
+      {!loading && normalizedPlayerId && groups.length === 0 ? (
         <div className="rounded-2xl border border-slate-800 bg-slate-900/70 px-4 py-4 text-sm text-slate-300">
           No boards found for{' '}
-          <span className="font-semibold text-white">{playerName.trim()}</span>. Try buying a
-          stick on the Matchups page first, or double-check the spelling of your name.
+          <span className="font-semibold text-white">{user?.name}</span>. Try buying a stick on the
+          Matchups page first.
         </div>
       ) : null}
 
-      {!playerName.trim() && !loading ? (
+      {!normalizedPlayerId && !loading ? (
         <div className="rounded-2xl border border-slate-800 bg-slate-900/70 px-4 py-4 text-sm text-slate-300">
-          Enter your name above to see the matchups and boards where you already have sticks.
+          Log in to see the matchups and boards where you already have sticks.
         </div>
       ) : null}
 
@@ -172,13 +149,11 @@ export default function Games() {
             ].filter(Boolean)
 
             const totalSticksForPlayer = boards.reduce((sum, board) => {
+              if (!normalizedPlayerId) return sum
               return (
                 sum +
                 board.sticks.filter(
-                  (stick) =>
-                    stick.owner &&
-                    stick.owner.name &&
-                    stick.owner.name.trim().toLowerCase() === normalizedPlayerName,
+                  (stick) => stick.owner && stick.owner.playerId === normalizedPlayerId,
                 ).length
               )
             }, 0)
@@ -223,8 +198,13 @@ export default function Games() {
 
                         const viewerIsWinner =
                           !!winner &&
-                          !!winner.ownerName &&
-                          winner.ownerName.trim().toLowerCase() === normalizedPlayerName
+                          !!normalizedPlayerId &&
+                          board.sticks.some(
+                            (stick) =>
+                              stick.owner &&
+                              stick.owner.playerId === normalizedPlayerId &&
+                              stick.digit === winner.digit,
+                          )
 
                         const cardClasses = viewerIsWinner
                           ? 'rounded-xl border border-amber-400 bg-amber-500/15 p-3 shadow-[0_0_0_1px_rgba(251,191,36,0.4)]'
@@ -281,11 +261,11 @@ export default function Games() {
                             )}
 
                             <div className="grid grid-cols-10 gap-1 text-[0.7rem]">
-                              {board.sticks.map((stick) => {
-                                const isMine =
-                                  !!stick.owner &&
-                                  !!stick.owner.name &&
-                                  stick.owner.name.trim().toLowerCase() === normalizedPlayerName
+                            {board.sticks.map((stick) => {
+                              const isMine =
+                                !!stick.owner &&
+                                !!normalizedPlayerId &&
+                                stick.owner.playerId === normalizedPlayerId
 
                                 return (
                                   <div
