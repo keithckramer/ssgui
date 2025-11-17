@@ -3,9 +3,10 @@ import { useEffect, useMemo, useState } from 'react'
 import GameRow from '@/components/GameRow'
 import type { Game } from '@/entities/game'
 import type { Board } from '@/entities/board'
+import { getBoardWinner } from '@/shared/boardWinners'
 import { boardsRepo } from '@/shared/boardsRepo'
 
-function GameBoardsSection({ gameId, refreshTrigger }: { gameId: string; refreshTrigger?: unknown }) {
+function GameBoardsSection({ game, refreshTrigger }: { game: Game; refreshTrigger?: unknown }) {
   const [boards, setBoards] = useState<Board[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -15,7 +16,7 @@ function GameBoardsSection({ gameId, refreshTrigger }: { gameId: string; refresh
     const load = async () => {
       setLoading(true)
       try {
-        const result = await boardsRepo.getBoardsForGame(gameId)
+        const result = await boardsRepo.getBoardsForGame(game.id)
         if (!cancelled) {
           setBoards(result)
         }
@@ -31,7 +32,7 @@ function GameBoardsSection({ gameId, refreshTrigger }: { gameId: string; refresh
     return () => {
       cancelled = true
     }
-  }, [gameId, refreshTrigger])
+  }, [game.id, refreshTrigger])
 
   if (loading) {
     return (
@@ -52,42 +53,73 @@ function GameBoardsSection({ gameId, refreshTrigger }: { gameId: string; refresh
   return (
     <div className="px-4 pb-4">
       <div className="space-y-3">
-        {boards.map((board) => (
-          <div
-            key={board.id}
-            className="rounded-xl border border-slate-800 bg-slate-900/60 p-3"
-          >
-            <div className="mb-2 flex items-center justify-between text-xs text-slate-300">
-              <span className="font-semibold text-slate-100">
-                Board #{board.boardNumber}
-              </span>
-              <span>
-                Status:{' '}
-                <span className="uppercase tracking-wide text-[0.65rem] text-slate-400">
-                  {board.status}
-                </span>
-              </span>
-            </div>
+        {boards.map((board) => {
+          const winner = getBoardWinner(game, board)
 
-            <div className="grid grid-cols-10 gap-1 text-[0.7rem]">
-              {board.sticks.map((stick) => (
-                <div
-                  key={stick.id}
-                  className={`flex h-8 flex-col items-center justify-center rounded border text-center ${
-                    stick.owner
-                      ? 'border-indigo-400 bg-indigo-600/80 text-white'
-                      : 'border-slate-700 bg-slate-950 text-slate-400'
-                  }`}
-                >
-                  <div className="font-semibold">{stick.digit}</div>
-                  <div className="truncate text-[0.6rem]">
-                    {stick.owner ? stick.owner.name : 'Available'}
-                  </div>
+          return (
+            <div
+              key={board.id}
+              className="rounded-xl border border-slate-800 bg-slate-900/60 p-3"
+            >
+              <div className="mb-2 flex items-center justify-between text-xs text-slate-300">
+                <span className="font-semibold text-slate-100">
+                  Board #{board.boardNumber}
+                </span>
+                <span>
+                  Status:{' '}
+                  <span className="uppercase tracking-wide text-[0.65rem] text-slate-400">
+                    {game.status}
+                  </span>
+                </span>
+              </div>
+
+              {/* Show winning info if game has a winningNumber */}
+              {game.winningNumber !== undefined && game.winningNumber !== null && (
+                <div className="mb-2 flex flex-wrap items-center justify-between gap-2 text-[0.7rem]">
+                  <span className="text-slate-300">
+                    Winning number:{' '}
+                    <span className="font-semibold text-indigo-300">
+                      {game.winningNumber}
+                    </span>
+                  </span>
+                  {winner && (
+                    <span className="text-slate-300">
+                      {winner.ownerName ? (
+                        <>
+                          Winner:{' '}
+                          <span className="font-semibold text-emerald-300">
+                            {winner.ownerName}
+                          </span>{' '}
+                          (digit {winner.digit})
+                        </>
+                      ) : (
+                        <>No winner (digit {winner.digit} unowned)</>
+                      )}
+                    </span>
+                  )}
                 </div>
-              ))}
+              )}
+
+              <div className="grid grid-cols-10 gap-1 text-[0.7rem]">
+                {board.sticks.map((stick) => (
+                  <div
+                    key={stick.id}
+                    className={`flex h-10 flex-col items-center justify-center rounded border text-center ${
+                      stick.owner
+                        ? 'border-indigo-400 bg-indigo-600/80 text-white'
+                        : 'border-slate-700 bg-slate-950 text-slate-400'
+                    }`}
+                  >
+                    <div className="font-semibold">{stick.digit}</div>
+                    <div className="truncate text-[0.6rem]">
+                      {stick.owner ? stick.owner.name : 'Available'}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
     </div>
   )
@@ -132,7 +164,7 @@ export default function MatchupsCard({ games, onBuy, expandedGameId, onToggleExp
                 isExpanded={expandedGameId === game.id}
               />
               {expandedGameId === game.id && (
-                <GameBoardsSection gameId={game.id} refreshTrigger={refreshTrigger} />
+                <GameBoardsSection game={game} refreshTrigger={refreshTrigger} />
               )}
             </div>
           ))}

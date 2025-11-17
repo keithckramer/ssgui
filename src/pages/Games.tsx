@@ -4,6 +4,7 @@ import type { Board } from '@/entities/board'
 import type { Game } from '@/entities/game'
 import { boardsRepo } from '@/shared/boardsRepo'
 import { gamesRepo } from '@/shared/gamesRepo'
+import { getBoardWinner } from '@/shared/boardWinners'
 import { getStoredPlayerName, setStoredPlayerName } from '@/shared/playerProfile'
 
 interface GameBoardsGroup {
@@ -215,51 +216,97 @@ export default function Games() {
                 {isExpanded && (
                   <div className="border-t border-slate-800 bg-slate-950/80 px-4 py-4">
                     <div className="space-y-3">
-                      {boards.map((board) => (
-                        <div
-                          key={board.id}
-                          className="rounded-xl border border-slate-800 bg-slate-900/60 p-3"
-                        >
-                          <div className="mb-2 flex items-center justify-between text-xs text-slate-300">
-                            <span className="font-semibold text-slate-100">
-                              Board #{board.boardNumber}
-                            </span>
-                            <span>
-                              Status:{' '}
-                              <span className="uppercase tracking-wide text-[0.65rem] text-slate-400">
-                                {board.status}
+                      {boards.map((board) => {
+                        const winner = getBoardWinner(game, board)
+
+                        const viewerIsWinner =
+                          !!winner &&
+                          !!winner.ownerName &&
+                          winner.ownerName.trim().toLowerCase() === normalizedPlayerName
+
+                        const cardClasses = viewerIsWinner
+                          ? 'rounded-xl border border-amber-400 bg-amber-500/15 p-3 shadow-[0_0_0_1px_rgba(251,191,36,0.4)]'
+                          : 'rounded-xl border border-slate-800 bg-slate-900/60 p-3'
+
+                        return (
+                          <div key={board.id} className={cardClasses}>
+                            <div className="mb-2 flex items-center justify-between text-xs text-slate-300">
+                              <span className="font-semibold text-slate-100">
+                                Board #{board.boardNumber}
                               </span>
-                            </span>
-                          </div>
+                              <span className="flex items-center gap-2">
+                                {game.winningNumber !== undefined && game.winningNumber !== null && (
+                                  <span>
+                                    Win #:{' '}
+                                    <span className="font-semibold text-indigo-300">
+                                      {game.winningNumber}
+                                    </span>
+                                  </span>
+                                )}
+                                <span>
+                                  Status:{' '}
+                                  <span className="uppercase tracking-wide text-[0.65rem] text-slate-400">
+                                    {game.status}
+                                  </span>
+                                </span>
+                              </span>
+                            </div>
 
-                          <div className="grid grid-cols-10 gap-1 text-[0.7rem]">
-                            {board.sticks.map((stick) => {
-                              const isMine =
-                                !!stick.owner &&
-                                !!stick.owner.name &&
-                                stick.owner.name.trim().toLowerCase() === normalizedPlayerName
+                            {winner && (
+                              <div className="mb-2 text-[0.7rem] text-slate-300">
+                                {winner.ownerName ? (
+                                  viewerIsWinner ? (
+                                    <>
+                                      🏆{' '}
+                                      <span className="font-semibold text-amber-300">
+                                        You won this board
+                                      </span>{' '}
+                                      (digit {winner.digit})
+                                    </>
+                                  ) : (
+                                    <>
+                                      Winner:{' '}
+                                      <span className="font-semibold text-emerald-300">
+                                        {winner.ownerName}
+                                      </span>{' '}
+                                      (digit {winner.digit})
+                                    </>
+                                  )
+                                ) : (
+                                  <>No winner (digit {winner.digit} unowned)</>
+                                )}
+                              </div>
+                            )}
 
-                              return (
-                                <div
-                                  key={stick.id}
-                                  className={`flex h-10 flex-col items-center justify-center rounded border text-center ${
-                                    isMine
-                                      ? 'border-emerald-400 bg-emerald-600/80 text-white'
-                                      : stick.owner
-                                        ? 'border-indigo-400 bg-indigo-600/80 text-white'
-                                        : 'border-slate-700 bg-slate-950 text-slate-400'
-                                  }`}
-                                >
-                                  <div className="font-semibold">{stick.digit}</div>
-                                  <div className="truncate text-[0.6rem]">
-                                    {stick.owner ? stick.owner.name : 'Available'}
+                            <div className="grid grid-cols-10 gap-1 text-[0.7rem]">
+                              {board.sticks.map((stick) => {
+                                const isMine =
+                                  !!stick.owner &&
+                                  !!stick.owner.name &&
+                                  stick.owner.name.trim().toLowerCase() === normalizedPlayerName
+
+                                return (
+                                  <div
+                                    key={stick.id}
+                                    className={`flex h-10 flex-col items-center justify-center rounded border text-center ${
+                                      isMine
+                                        ? 'border-emerald-400 bg-emerald-600/80 text-white'
+                                        : stick.owner
+                                          ? 'border-indigo-400 bg-indigo-600/80 text-white'
+                                          : 'border-slate-700 bg-slate-950 text-slate-400'
+                                    }`}
+                                  >
+                                    <div className="font-semibold">{stick.digit}</div>
+                                    <div className="truncate text-[0.6rem]">
+                                      {stick.owner ? stick.owner.name : 'Available'}
+                                    </div>
                                   </div>
-                                </div>
-                              )
-                            })}
+                                )
+                              })}
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        )
+                      })}
                     </div>
                   </div>
                 )}
