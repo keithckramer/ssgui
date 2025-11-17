@@ -17,10 +17,7 @@ interface GamesContextValue {
   createGame(input: Omit<Game, 'id' | 'createdAt' | 'updatedAt'>): Promise<Game>
   updateGame(id: string, patch: Partial<Game>): Promise<Game>
   deleteGame(id: string): Promise<void>
-  finalizeGame(
-    id: string,
-    input: Required<Pick<Game, 'homeScore' | 'awayScore' | 'winningNumber'>>,
-  ): Promise<Game>
+  finalizeGame(id: string, input: Required<Pick<Game, 'homeScore' | 'awayScore'>>): Promise<Game>
 }
 
 const GamesContext = createContext<GamesContextValue | null>(null)
@@ -66,17 +63,14 @@ export function GamesProvider({ children }: { children: ReactNode }) {
     setGames((prev) => prev.filter((game) => game.id !== id))
   }, [])
 
-  const finalizeGame = useCallback(
-    async (id: string, input: Required<Pick<Game, 'homeScore' | 'awayScore' | 'winningNumber'>>) => {
-      const updated = await gamesRepo.update(id, {
-        ...input,
-        status: 'FINAL',
-        isPublished: false,
-      })
-      setGames((prev) => prev.map((game) => (game.id === id ? updated : game)))
-      return updated
-    },
-  [])
+  const finalizeGame = useCallback(async (id: string, input: Required<Pick<Game, 'homeScore' | 'awayScore'>>) => {
+    const updated = await gamesRepo.finalize({
+      gameId: id,
+      ...input,
+    })
+    setGames((prev) => prev.map((game) => (game.id === id ? updated : game)))
+    return updated
+  }, [])
 
   const publishedGames = useMemo(
     () => games.filter((game) => game.isPublished && game.status !== 'FINAL'),
