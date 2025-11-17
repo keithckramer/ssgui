@@ -1,4 +1,6 @@
 import { Link, useLocation } from 'react-router-dom'
+
+import { useAuth } from '@/app/AuthContext'
 import { routes } from '@/app/routes'
 
 const navLinks = [
@@ -10,6 +12,7 @@ const navLinks = [
 
 export default function Navbar() {
   const location = useLocation()
+  const { user, logout } = useAuth()
 
   return (
     <header className="sticky top-0 z-50 border-b border-slate-800 bg-slate-950/95 backdrop-blur">
@@ -44,9 +47,23 @@ export default function Navbar() {
           })}
         </nav>
 
-        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-600 text-sm font-bold text-white">
-          KK
-        </div>
+        {user ? (
+          <button
+            type="button"
+            onClick={logout}
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-600 text-sm font-bold text-white hover:bg-blue-500"
+            title={`${user.name} (click to log out)`}
+          >
+            {user.initials || 'U'}
+          </button>
+        ) : (
+          <Link
+            to={routes.login}
+            className="rounded-full border border-slate-700 px-3 py-1 text-xs font-semibold text-slate-100 hover:bg-slate-800"
+          >
+            Login
+          </Link>
+        )}
       </div>
     </header>
   )

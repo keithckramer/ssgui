@@ -1,5 +1,6 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 
+import { AuthProvider } from '@/app/AuthContext'
 import Layout from '@/app/Layout'
 import Protected from '@/app/Protected'
 import { routes } from '@/app/routes'
@@ -15,26 +16,28 @@ import NotFound from '@/pages/NotFound'
 function App() {
   return (
     <BrowserRouter>
-      <GamesProvider>
-        <Routes>
-          <Route element={<Layout />}>
-            <Route path={routes.home} element={<Home />} />
-            <Route path={routes.matchups} element={<Matchups />} />
-            <Route
-              path={routes.games}
-              element={
-                <Protected>
-                  <Games />
-                </Protected>
-              }
-            />
-            <Route path={routes.login} element={<Login />} />
-            <Route path={routes.admin} element={<Admin />} />
-            <Route path={routes.board} element={<BoardPage />} />
-          </Route>
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </GamesProvider>
+      <AuthProvider>
+        <GamesProvider>
+          <Routes>
+            <Route element={<Layout />}>
+              <Route path={routes.home} element={<Home />} />
+              <Route path={routes.matchups} element={<Matchups />} />
+              <Route
+                path={routes.games}
+                element={
+                  <Protected>
+                    <Games />
+                  </Protected>
+                }
+              />
+              <Route path={routes.login} element={<Login />} />
+              <Route path={routes.admin} element={<Admin />} />
+              <Route path={routes.board} element={<BoardPage />} />
+            </Route>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </GamesProvider>
+      </AuthProvider>
     </BrowserRouter>
   )
 }
