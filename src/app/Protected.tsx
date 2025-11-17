@@ -1,15 +1,24 @@
 // src/app/Protected.tsx
-import { ReactNode } from "react";
-import { Navigate } from "react-router-dom";
+import { ReactNode } from 'react'
+import { Navigate, useLocation } from 'react-router-dom'
+
+import { useAuth } from '@/app/AuthContext'
+import { routes } from '@/app/routes'
 
 export default function Protected({ children }: { children: ReactNode }) {
-  // Temporary: allow all routes while auth is under construction.
-  // We still keep this wrapper so it's easy to wire up real auth later.
-  const isAuthed = true;
+  const { user } = useAuth()
+  const location = useLocation()
 
-  return isAuthed ? children : <Navigate to="/login" replace />;
+  if (!user) {
+    // Remember where we came from so we can send the user back after login
+    return (
+      <Navigate
+        to={routes.login}
+        replace
+        state={{ from: location.pathname || routes.home }}
+      />
+    )
+  }
+
+  return <>{children}</>
 }
-
-/* usage:
-<Route path="/games" element={<Protected><Games/></Protected>} />
-*/
