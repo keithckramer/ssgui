@@ -10,7 +10,6 @@ import { getEffectiveGameStatus } from '@/shared/gameStatus'
 function GameBoardsSection({ game, refreshTrigger }: { game: Game; refreshTrigger?: unknown }) {
   const [boards, setBoards] = useState<Board[]>([])
   const [loading, setLoading] = useState(true)
-  const effectiveStatus = getEffectiveGameStatus(game)
 
   useEffect(() => {
     let cancelled = false
@@ -56,6 +55,7 @@ function GameBoardsSection({ game, refreshTrigger }: { game: Game; refreshTrigge
     <div className="px-4 pb-4">
       <div className="space-y-3">
         {boards.map((board) => {
+          const effectiveStatus = getEffectiveGameStatus(game)
           const winner = getBoardWinner(game, board)
 
           return (
@@ -67,37 +67,37 @@ function GameBoardsSection({ game, refreshTrigger }: { game: Game; refreshTrigge
                 <span className="font-semibold text-slate-100">
                   Board #{board.boardNumber}
                 </span>
-                <span>
-                  Status:{' '}
-                  <span className="uppercase tracking-wide text-[0.65rem] text-slate-400">
-                    {effectiveStatus}
+                <span className="flex items-center gap-2">
+                  {game.winningNumber !== undefined && game.winningNumber !== null && (
+                    <span>
+                      Win #:{' '}
+                      <span className="font-semibold text-indigo-300">
+                        {game.winningNumber}
+                      </span>
+                    </span>
+                  )}
+                  <span>
+                    Status:{' '}
+                    <span className="uppercase tracking-wide text-[0.65rem] text-slate-400">
+                      {effectiveStatus}
+                    </span>
                   </span>
                 </span>
               </div>
 
-              {/* Show winning info if game has a winningNumber */}
-              {game.winningNumber !== undefined && game.winningNumber !== null && (
-                <div className="mb-2 flex flex-wrap items-center justify-between gap-2 text-[0.7rem]">
-                  <span className="text-slate-300">
-                    Winning number:{' '}
-                    <span className="font-semibold text-indigo-300">
-                      {game.winningNumber}
-                    </span>
-                  </span>
-                  {winner && (
-                    <span className="text-slate-300">
-                      {winner.ownerName ? (
-                        <>
-                          Winner:{' '}
-                          <span className="font-semibold text-emerald-300">
-                            {winner.ownerName}
-                          </span>{' '}
-                          (digit {winner.digit})
-                        </>
-                      ) : (
-                        <>No winner (digit {winner.digit} unowned)</>
-                      )}
-                    </span>
+              {/* Winner info only when winningNumber is set */}
+              {winner && (
+                <div className="mb-2 text-[0.7rem] text-slate-300">
+                  {winner.ownerName ? (
+                    <>
+                      Winner:{' '}
+                      <span className="font-semibold text-emerald-300">
+                        {winner.ownerName}
+                      </span>{' '}
+                      (digit {winner.digit})
+                    </>
+                  ) : (
+                    <>No winner (digit {winner.digit} unowned)</>
                   )}
                 </div>
               )}

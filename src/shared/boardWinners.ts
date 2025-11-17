@@ -7,13 +7,16 @@ export interface BoardWinner {
 }
 
 /**
- * Given a game (with winningNumber) and a board,
- * determine which digit is the winner and who owns it, if anyone.
+ * Determine the winning digit + owner for a board.
+ *
+ * Uses:
+ *  - game.winningNumber   → the winning digit (0–9)
+ *  - board.sticks         → digits + owners on this board
  *
  * Returns:
- * - null          → game has no winningNumber yet (not finalized)
- * - { digit, ownerName: null } → winning digit exists but is unowned on this board
- * - { digit, ownerName }       → winning digit owned by "ownerName" on this board
+ *  - null                  → game has no winningNumber yet
+ *  - { digit, ownerName: null } → winning digit exists but is unowned on this board
+ *  - { digit, ownerName }       → winning digit owned by "ownerName"
  */
 export function getBoardWinner(game: Game, board: Board): BoardWinner | null {
   if (game.winningNumber === undefined || game.winningNumber === null) {
@@ -24,16 +27,14 @@ export function getBoardWinner(game: Game, board: Board): BoardWinner | null {
   const winningStick = board.sticks.find((stick) => stick.digit === digit)
 
   if (!winningStick) {
-    // This should be rare if boards always have digits 0–9, but we handle it anyway.
+    // Should be rare if boards always have 0–9, but we handle it anyway.
     return { digit, ownerName: null }
   }
 
-  if (!winningStick.owner || !winningStick.owner.name) {
+  const ownerName = winningStick.owner?.name?.trim()
+  if (!ownerName) {
     return { digit, ownerName: null }
   }
 
-  return {
-    digit,
-    ownerName: winningStick.owner.name,
-  }
+  return { digit, ownerName }
 }
