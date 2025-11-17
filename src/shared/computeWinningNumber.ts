@@ -1,8 +1,15 @@
+/**
+ * Compute the winning number for a game.
+ *
+ * Rule: homeScore + awayScore, then take the LAST digit (0–9).
+ *
+ * Example:
+ *   homeScore = 24, awayScore = 21
+ *   total = 45 → winningNumber = 5
+ */
 export function computeWinningNumber(homeScore: number, awayScore: number): number {
-  // Total points scored in the game
   const total = homeScore + awayScore
 
-  // Last digit of the total (0–9). The % 10 is just “give me the last digit”.
-  // Example: 24 + 21 = 45 → 45 % 10 = 5
+  // % 10 is just "give me the last digit"
   return Math.abs(total) % 10
 }

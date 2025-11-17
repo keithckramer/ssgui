@@ -72,6 +72,13 @@ export default function FinalizeGameForm({ game, onSubmit, onCancel, disabled = 
         </div>
       </div>
 
+      {game.winningNumber !== undefined && game.winningNumber !== null ? (
+        <p className="text-sm text-slate-300">
+          Winning number:{' '}
+          <span className="font-semibold text-indigo-300">{game.winningNumber}</span>
+        </p>
+      ) : null}
+
       <div className="flex items-center justify-end gap-2">
         <button
           type="button"

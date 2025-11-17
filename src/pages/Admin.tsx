@@ -172,6 +172,12 @@ export default function AdminGamesPage() {
                         {game.awayTeam} <span className="text-slate-500">@</span> {game.homeTeam}
                       </div>
                       {game.league ? <div className="text-xs text-slate-500">{game.league}</div> : null}
+                      {game.status === 'FINAL' ? (
+                        <div className="text-xs text-indigo-200">
+                          Final score: {game.awayScore ?? '–'}-{game.homeScore ?? '–'} · Winning number:{' '}
+                          {game.winningNumber ?? '–'}
+                        </div>
+                      ) : null}
                     </td>
                     <td className="px-4 py-3 text-slate-300">
                       {new Date(game.eventDateTime).toLocaleString()}
