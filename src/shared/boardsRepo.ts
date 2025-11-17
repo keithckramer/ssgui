@@ -1,5 +1,5 @@
 import type { Board, BoardDigit, StickOwner } from '@/entities/board'
-import { BOARD_DIGITS, createEmptyBoard, isBoardFull } from '@/entities/board'
+import { createEmptyBoard, isBoardFull } from '@/entities/board'
 import type { Game } from '@/entities/game'
 import { gamesRepo } from '@/shared/gamesRepo'
 import { getEffectiveGameStatus } from '@/shared/gameStatus'
@@ -87,11 +87,6 @@ export interface StickPurchase {
   owner: StickOwner
 }
 
-interface BuySticksOptions {
-  /** If true, try to put each stick on a different board. If false, pack into as few boards as possible. */
-  separateBoards?: boolean
-}
-
 export interface BuySticksResult {
   purchases: StickPurchase[]
   boards: Board[] // updated boards snapshot
@@ -141,12 +136,13 @@ function allocateSingleStickToBoard(
  * - If separateBoards is true:
  *   - Tries to add at most one new stick per board for this purchase, creating new boards as needed.
  */
-async function buySticksForGame(
-  gameId: string,
-  buyerName: string,
-  quantity: number,
-  options: BuySticksOptions = {},
-): Promise<BuySticksResult> {
+async function buySticksForGame(options: {
+  gameId: string
+  owner: StickOwner
+  quantity: number
+  separateBoards?: boolean
+}): Promise<BuySticksResult> {
+  const { gameId, owner, quantity, separateBoards: separateBoardsOption = false } = options
   // Load the game and enforce status + kickoff rules
   const game: Game = await gamesRepo.getById(gameId)
   const effectiveStatus = getEffectiveGameStatus(game)
@@ -165,16 +161,19 @@ async function buySticksForGame(
 
   // From here, effectiveStatus is OPEN and now < eventDateTime
 
-  const trimmedName = buyerName.trim()
+  const trimmedName = owner.name.trim()
   if (!trimmedName) {
     return Promise.reject(new Error('Buyer name is required'))
+  }
+  if (!owner.playerId) {
+    return Promise.reject(new Error('Buyer ID is required'))
   }
   if (!Number.isFinite(quantity) || quantity <= 0) {
     return Promise.reject(new Error('Quantity must be greater than zero'))
   }
 
-  const separateBoards = options.separateBoards === true
-  const owner: StickOwner = { name: trimmedName }
+  const separateBoards = separateBoardsOption === true
+  const purchaseOwner: StickOwner = { playerId: owner.playerId, name: trimmedName }
 
   const boards = readBoards()
   const purchases: StickPurchase[] = []
@@ -193,7 +192,7 @@ async function buySticksForGame(
             b.sticks.some((stick) => !stick.owner),
         ) ?? createBoardForGame(gameId, boards)
 
-      const purchase = allocateSingleStickToBoard(board, owner)
+      const purchase = allocateSingleStickToBoard(board, purchaseOwner)
 
       if (purchase) {
         purchases.push(purchase)
@@ -220,7 +219,7 @@ async function buySticksForGame(
             b.sticks.some((stick) => !stick.owner),
         ) ?? createBoardForGame(gameId, boards)
 
-      const purchase = allocateSingleStickToBoard(board, owner)
+      const purchase = allocateSingleStickToBoard(board, purchaseOwner)
       if (purchase) {
         purchases.push(purchase)
         usedBoardIdsThisPurchase.add(board.id)

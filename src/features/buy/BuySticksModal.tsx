@@ -1,4 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+
+import { useAuth } from '@/app/AuthContext'
 import type { Game } from '@/entities/game'
 import { boardsRepo, type StickPurchase } from '@/shared/boardsRepo'
 
@@ -15,11 +17,21 @@ export default function BuySticksModal({
   onClose,
   onPurchaseSuccess,
 }: BuySticksModalProps) {
+  const { user } = useAuth()
   const [buyerName, setBuyerName] = useState('')
   const [quantity, setQuantity] = useState(1)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [separateBoards, setSeparateBoards] = useState(false)
+
+  useEffect(() => {
+    if (user) {
+      setBuyerName(user.name)
+      setError(null)
+    } else {
+      setBuyerName('')
+    }
+  }, [user])
 
   if (!isOpen || !game) {
     return null
@@ -29,9 +41,14 @@ export default function BuySticksModal({
     event.preventDefault()
     setError(null)
 
+    if (!user) {
+      setError('You must be logged in to complete the purchase.')
+      return
+    }
+
     const trimmedName = buyerName.trim()
     if (!trimmedName) {
-      setError('Please enter your name.')
+      setError('Your name is required to complete the purchase.')
       return
     }
 
@@ -42,14 +59,19 @@ export default function BuySticksModal({
 
     try {
       setLoading(true)
-      const result = await boardsRepo.buySticksForGame(game.id, trimmedName, quantity, {
+      const result = await boardsRepo.buySticksForGame({
+        gameId: game.id,
+        owner: {
+          playerId: user.id,
+          name: trimmedName,
+        },
+        quantity,
         separateBoards,
       })
 
       // result.purchases: array of { boardId, boardNumber, digit, owner }
       onPurchaseSuccess(result.purchases)
-    } catch (err) {
-      console.error(err)
+    } catch {
       setError('Unable to complete purchase. Please try again.')
     } finally {
       setLoading(false)
@@ -111,8 +133,11 @@ export default function BuySticksModal({
               className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-white focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
               value={buyerName}
               onChange={(event) => setBuyerName(event.target.value)}
-              disabled={loading}
+              disabled={loading || !user}
             />
+            {!user && (
+              <p className="mt-1 text-xs text-amber-300">Login first to auto-fill your name.</p>
+            )}
           </div>
 
           <div>
