@@ -7,7 +7,6 @@ const navLinks = [
   { to: routes.home, label: 'Home' },
   { to: routes.matchups, label: 'Matchups' },
   { to: routes.games, label: 'Boards' },
-  { to: routes.admin, label: 'Admin' },
 ]
 
 export default function Navbar() {
@@ -45,6 +44,19 @@ export default function Navbar() {
               </Link>
             )
           })}
+
+          {user?.role === 'admin' && (
+            <Link
+              to={routes.admin}
+              className={`rounded-full px-3 py-1.5 text-sm font-medium transition ${
+                location.pathname === routes.admin
+                  ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20'
+                  : 'text-slate-300 hover:bg-slate-800'
+              }`}
+            >
+              Admin
+            </Link>
+          )}
         </nav>
 
         {user ? (
