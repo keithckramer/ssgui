@@ -3,7 +3,7 @@ import type { Game } from '@/entities/game'
 
 interface FinalizeGameFormProps {
   game: Game
-  onSubmit(values: { homeScore: number; awayScore: number; winningNumber: number }): Promise<void> | void
+  onSubmit(values: { homeScore: number; awayScore: number }): Promise<void> | void
   onCancel(): void
   disabled?: boolean
 }
@@ -11,7 +11,6 @@ interface FinalizeGameFormProps {
 export default function FinalizeGameForm({ game, onSubmit, onCancel, disabled = false }: FinalizeGameFormProps) {
   const [homeScore, setHomeScore] = useState<number | ''>(game.homeScore ?? '')
   const [awayScore, setAwayScore] = useState<number | ''>(game.awayScore ?? '')
-  const [winningNumber, setWinningNumber] = useState<number | ''>(game.winningNumber ?? '')
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -20,7 +19,6 @@ export default function FinalizeGameForm({ game, onSubmit, onCancel, disabled = 
 
     if (homeScore === '' || Number.isNaN(homeScore)) nextErrors.homeScore = 'Home score is required'
     if (awayScore === '' || Number.isNaN(awayScore)) nextErrors.awayScore = 'Away score is required'
-    if (winningNumber === '' || Number.isNaN(winningNumber)) nextErrors.winningNumber = 'Winning number is required'
 
     setErrors(nextErrors)
     if (Object.keys(nextErrors).length > 0) return
@@ -28,7 +26,6 @@ export default function FinalizeGameForm({ game, onSubmit, onCancel, disabled = 
     await onSubmit({
       homeScore: Number(homeScore),
       awayScore: Number(awayScore),
-      winningNumber: Number(winningNumber),
     })
   }
 
@@ -39,10 +36,11 @@ export default function FinalizeGameForm({ game, onSubmit, onCancel, disabled = 
     <form onSubmit={handleSubmit} className="space-y-4">
       <h3 className="text-lg font-semibold text-white">Finalize {game.awayTeam} @ {game.homeTeam}</h3>
       <p className="text-sm text-slate-400">
-        Post the final scores and winning number to complete this matchup. Finalized games are hidden from buyers.
+        Post the final scores to complete this matchup. The winning number is calculated automatically. Finalized games are hidden
+        from buyers.
       </p>
 
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2">
         <div className="space-y-2">
           <label htmlFor="final-home-score" className="block text-sm font-medium text-slate-300">
             Home Score
@@ -71,23 +69,6 @@ export default function FinalizeGameForm({ game, onSubmit, onCancel, disabled = 
             disabled={disabled}
           />
           {errors.awayScore ? <p className="text-xs text-red-400">{errors.awayScore}</p> : null}
-        </div>
-
-        <div className="space-y-2">
-          <label htmlFor="final-winning-number" className="block text-sm font-medium text-slate-300">
-            Winning Number
-          </label>
-          <input
-            id="final-winning-number"
-            type="number"
-            className={inputClassName}
-            value={winningNumber}
-            onChange={(event) =>
-              setWinningNumber(event.target.value === '' ? '' : Number.parseInt(event.target.value, 10))
-            }
-            disabled={disabled}
-          />
-          {errors.winningNumber ? <p className="text-xs text-red-400">{errors.winningNumber}</p> : null}
         </div>
       </div>
 

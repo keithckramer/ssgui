@@ -73,7 +73,7 @@ export default function AdminGamesPage() {
     }
   }
 
-  const handleFinalize = async (id: string, values: { homeScore: number; awayScore: number; winningNumber: number }) => {
+  const handleFinalize = async (id: string, values: { homeScore: number; awayScore: number }) => {
     try {
       setSubmitting(true)
       await finalizeGame(id, values)

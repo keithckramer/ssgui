@@ -1,4 +1,5 @@
 import type { Game } from '@/entities/game'
+import { computeWinningNumber } from '@/shared/computeWinningNumber'
 
 const STORAGE_KEY = 'ssg.games'
 
@@ -105,6 +106,7 @@ export interface GamesRepo {
   create(input: Omit<Game, 'id' | 'createdAt' | 'updatedAt'>): Promise<Game>
   update(id: string, patch: Partial<Game>): Promise<Game>
   remove(id: string): Promise<void>
+  finalize(options: { gameId: string; homeScore: number; awayScore: number }): Promise<Game>
 }
 
 export const gamesRepo: GamesRepo = {
@@ -151,4 +153,42 @@ export const gamesRepo: GamesRepo = {
     const filtered = games.filter((game) => game.id !== id)
     writeGames(filtered)
   },
+
+  async finalize(options) {
+    return finalizeGame(options)
+  },
+}
+
+export async function finalizeGame(options: {
+  gameId: string
+  homeScore: number
+  awayScore: number
+}): Promise<Game> {
+  const { gameId, homeScore, awayScore } = options
+
+  const games = readGames()
+  const index = games.findIndex((game) => game.id === gameId)
+
+  if (index === -1) {
+    throw new Error(`Game with id ${gameId} not found`)
+  }
+
+  const game = games[index]
+  const winningNumber = computeWinningNumber(homeScore, awayScore)
+  const now = nowIso()
+
+  const updated: Game = {
+    ...game,
+    homeScore,
+    awayScore,
+    winningNumber,
+    status: 'FINAL',
+    isPublished: false,
+    updatedAt: now,
+  }
+
+  games[index] = updated
+  writeGames(games)
+
+  return updated
 }
