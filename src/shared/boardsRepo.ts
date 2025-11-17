@@ -1,5 +1,8 @@
 import type { Board, BoardDigit, StickOwner } from '@/entities/board'
 import { BOARD_DIGITS, createEmptyBoard, isBoardFull } from '@/entities/board'
+import type { Game } from '@/entities/game'
+import { gamesRepo } from '@/shared/gamesRepo'
+import { getEffectiveGameStatus } from '@/shared/gameStatus'
 
 const STORAGE_KEY = 'ssg.boards.v2'
 
@@ -144,6 +147,24 @@ async function buySticksForGame(
   quantity: number,
   options: BuySticksOptions = {},
 ): Promise<BuySticksResult> {
+  // Load the game and enforce status + kickoff rules
+  const game: Game = await gamesRepo.getById(gameId)
+  const effectiveStatus = getEffectiveGameStatus(game)
+
+  if (effectiveStatus === 'PENDING') {
+    throw new Error('This matchup is not open for purchases yet.')
+  }
+
+  if (effectiveStatus === 'CLOSED') {
+    throw new Error('This matchup has started. You can no longer buy sticks.')
+  }
+
+  if (effectiveStatus === 'FINAL') {
+    throw new Error('This matchup is final. You can no longer buy sticks.')
+  }
+
+  // From here, effectiveStatus is OPEN and now < eventDateTime
+
   const trimmedName = buyerName.trim()
   if (!trimmedName) {
     return Promise.reject(new Error('Buyer name is required'))

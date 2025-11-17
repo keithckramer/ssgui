@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import type { Game, GameStatus, SportType } from '@/entities/game'
 
 const sportOptions: SportType[] = ['NFL', 'NBA', 'NHL', 'MLB', 'MLS', 'OTHER']
-const statusOptions: GameStatus[] = ['DRAFT', 'PUBLISHED', 'IN_PROGRESS', 'FINAL']
+const statusOptions: GameStatus[] = ['PENDING', 'OPEN', 'FINAL']
 
 export type GameEditorValues = Omit<Game, 'id' | 'createdAt' | 'updatedAt'>
 
@@ -44,7 +44,7 @@ export default function GameEditor({
     awayTeam: initialValue?.awayTeam ?? '',
     eventDateTime: initialValue?.eventDateTime ?? new Date().toISOString(),
     venue: initialValue?.venue ?? '',
-    status: initialValue?.status ?? 'DRAFT',
+    status: initialValue?.status ?? 'PENDING',
     isPublished: initialValue?.isPublished ?? false,
     homeScore: initialValue?.homeScore,
     awayScore: initialValue?.awayScore,
@@ -62,7 +62,7 @@ export default function GameEditor({
       awayTeam: initialValue.awayTeam ?? '',
       eventDateTime: initialValue.eventDateTime ?? new Date().toISOString(),
       venue: initialValue.venue ?? '',
-      status: initialValue.status ?? 'DRAFT',
+      status: initialValue.status ?? 'PENDING',
       isPublished: initialValue.isPublished ?? false,
       homeScore: initialValue.homeScore,
       awayScore: initialValue.awayScore,

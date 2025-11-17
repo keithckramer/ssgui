@@ -5,10 +5,12 @@ import type { Game } from '@/entities/game'
 import type { Board } from '@/entities/board'
 import { getBoardWinner } from '@/shared/boardWinners'
 import { boardsRepo } from '@/shared/boardsRepo'
+import { getEffectiveGameStatus } from '@/shared/gameStatus'
 
 function GameBoardsSection({ game, refreshTrigger }: { game: Game; refreshTrigger?: unknown }) {
   const [boards, setBoards] = useState<Board[]>([])
   const [loading, setLoading] = useState(true)
+  const effectiveStatus = getEffectiveGameStatus(game)
 
   useEffect(() => {
     let cancelled = false
@@ -68,7 +70,7 @@ function GameBoardsSection({ game, refreshTrigger }: { game: Game; refreshTrigge
                 <span>
                   Status:{' '}
                   <span className="uppercase tracking-wide text-[0.65rem] text-slate-400">
-                    {game.status}
+                    {effectiveStatus}
                   </span>
                 </span>
               </div>
