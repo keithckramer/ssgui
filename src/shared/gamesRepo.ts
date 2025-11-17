@@ -67,7 +67,7 @@ const seedGames = (): Game[] => {
       awayTeam: 'Buffalo Bills',
       eventDateTime: future(24),
       venue: 'MetLife Stadium',
-      status: 'PUBLISHED',
+      status: 'OPEN',
       isPublished: true,
       createdAt: base,
       updatedAt: base,
@@ -80,7 +80,7 @@ const seedGames = (): Game[] => {
       awayTeam: 'Golden State Warriors',
       eventDateTime: future(48),
       venue: 'Crypto.com Arena',
-      status: 'PUBLISHED',
+      status: 'OPEN',
       isPublished: true,
       createdAt: base,
       updatedAt: base,
@@ -93,7 +93,7 @@ const seedGames = (): Game[] => {
       awayTeam: 'Boston Bruins',
       eventDateTime: future(72),
       venue: 'Scotiabank Arena',
-      status: 'DRAFT',
+      status: 'PENDING',
       isPublished: false,
       createdAt: base,
       updatedAt: base,
@@ -103,6 +103,7 @@ const seedGames = (): Game[] => {
 
 export interface GamesRepo {
   getAll(): Promise<Game[]>
+  getById(id: string): Promise<Game>
   create(input: Omit<Game, 'id' | 'createdAt' | 'updatedAt'>): Promise<Game>
   update(id: string, patch: Partial<Game>): Promise<Game>
   remove(id: string): Promise<void>
@@ -112,6 +113,17 @@ export interface GamesRepo {
 export const gamesRepo: GamesRepo = {
   async getAll() {
     return readGames()
+  },
+
+  async getById(id) {
+    const games = readGames()
+    const game = games.find((item) => item.id === id)
+
+    if (!game) {
+      throw new Error(`Game with id ${id} not found`)
+    }
+
+    return game
   },
 
   async create(input) {
@@ -183,7 +195,7 @@ export async function finalizeGame(options: {
     awayScore,
     winningNumber,
     status: 'FINAL',
-    isPublished: false,
+    isPublished: game.isPublished,
     updatedAt: now,
   }
 

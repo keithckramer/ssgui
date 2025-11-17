@@ -1,5 +1,5 @@
 export type SportType = 'NFL' | 'NBA' | 'NHL' | 'MLB' | 'MLS' | 'OTHER'
-export type GameStatus = 'DRAFT' | 'PUBLISHED' | 'IN_PROGRESS' | 'FINAL'
+export type GameStatus = 'PENDING' | 'OPEN' | 'CLOSED' | 'FINAL'
 
 export interface Game {
   id: string

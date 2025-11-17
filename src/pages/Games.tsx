@@ -5,6 +5,7 @@ import type { Game } from '@/entities/game'
 import { boardsRepo } from '@/shared/boardsRepo'
 import { gamesRepo } from '@/shared/gamesRepo'
 import { getBoardWinner } from '@/shared/boardWinners'
+import { getEffectiveGameStatus } from '@/shared/gameStatus'
 import { getStoredPlayerName, setStoredPlayerName } from '@/shared/playerProfile'
 
 interface GameBoardsGroup {
@@ -161,6 +162,7 @@ export default function Games() {
         <div className="space-y-4">
           {groups.map(({ game, boards }) => {
             const isExpanded = expandedGameId === game.id
+            const effectiveStatus = getEffectiveGameStatus(game)
 
             const summaryParts = [
               `${game.awayTeam} @ ${game.homeTeam}`,
@@ -246,7 +248,7 @@ export default function Games() {
                                 <span>
                                   Status:{' '}
                                   <span className="uppercase tracking-wide text-[0.65rem] text-slate-400">
-                                    {game.status}
+                                    {effectiveStatus}
                                   </span>
                                 </span>
                               </span>

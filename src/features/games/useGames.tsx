@@ -9,6 +9,7 @@ import {
 } from 'react'
 import type { Game } from '@/entities/game'
 import { gamesRepo } from '@/shared/gamesRepo'
+import { getEffectiveGameStatus } from '@/shared/gameStatus'
 
 interface GamesContextValue {
   games: Game[]
@@ -73,7 +74,10 @@ export function GamesProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const publishedGames = useMemo(
-    () => games.filter((game) => game.isPublished && game.status !== 'FINAL'),
+    () =>
+      games.filter(
+        (game) => game.isPublished && getEffectiveGameStatus(game) !== 'PENDING',
+      ),
     [games],
   )
 

@@ -5,6 +5,7 @@ import type { Game } from '@/entities/game'
 import BuySticksModal from '@/features/buy/BuySticksModal'
 import { useGames } from '@/features/games/useGames'
 import { boardsRepo, type StickPurchase } from '@/shared/boardsRepo'
+import { getEffectiveGameStatus } from '@/shared/gameStatus'
 
 void boardsRepo
 
@@ -49,7 +50,7 @@ export default function MatchupsPage() {
     <div className="flex flex-1 flex-col gap-6">
       <h1 className="text-3xl font-bold text-white">Matchups</h1>
       <MatchupsCard
-        games={publishedGames}
+        games={publishedGames.filter((game) => getEffectiveGameStatus(game) !== 'PENDING')}
         onBuy={handleOpenBuy}
         expandedGameId={expandedGameId}
         onToggleExpand={handleToggleExpand}

@@ -1,4 +1,5 @@
 import type { Game } from '@/entities/game'
+import { getEffectiveGameStatus } from '@/shared/gameStatus'
 
 interface GameRowProps {
   game: Game
@@ -8,7 +9,8 @@ interface GameRowProps {
 }
 
 export default function GameRow({ game, onBuy, onToggleExpand, isExpanded }: GameRowProps) {
-  const canBuy = game.isPublished && game.status !== 'FINAL'
+  const effectiveStatus = getEffectiveGameStatus(game)
+  const canBuy = game.isPublished && effectiveStatus === 'OPEN'
 
   return (
     <div className="border-b border-slate-800">
@@ -27,6 +29,10 @@ export default function GameRow({ game, onBuy, onToggleExpand, isExpanded }: Gam
         </div>
 
         <div className="flex items-center gap-3">
+          <span className="rounded-full border border-slate-700 px-2 py-0.5 text-[0.65rem] uppercase tracking-wide text-slate-300">
+            {effectiveStatus}
+          </span>
+
           {canBuy && onBuy && (
             <button
               type="button"

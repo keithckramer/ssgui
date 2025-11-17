@@ -90,14 +90,14 @@ export default function AdminGamesPage() {
   const renderStatusBadge = (status: Game['status']) => {
     const base = 'inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold'
     switch (status) {
-      case 'PUBLISHED':
-        return <span className={`${base} bg-emerald-500/20 text-emerald-300`}>Published</span>
-      case 'IN_PROGRESS':
-        return <span className={`${base} bg-amber-500/20 text-amber-300`}>In Progress</span>
+      case 'OPEN':
+        return <span className={`${base} bg-emerald-500/20 text-emerald-300`}>Open</span>
+      case 'CLOSED':
+        return <span className={`${base} bg-amber-500/20 text-amber-300`}>Closed</span>
       case 'FINAL':
         return <span className={`${base} bg-slate-500/30 text-slate-200`}>Final</span>
       default:
-        return <span className={`${base} bg-slate-600/30 text-slate-200`}>Draft</span>
+        return <span className={`${base} bg-slate-600/30 text-slate-200`}>Pending</span>
     }
   }
 
