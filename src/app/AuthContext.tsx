@@ -13,6 +13,7 @@ export interface AuthUser {
   id: string
   name: string
   initials: string
+  role: 'admin' | 'player'
 }
 
 interface AuthContextValue {
@@ -30,12 +31,29 @@ function computeInitials(name: string): string {
   return (parts[0][0] + parts[1][0]).toUpperCase()
 }
 
+const ADMIN_NAMES = ['keith', 'keith kramer', 'admin']
+
+function resolveRoleFromName(name: string): 'admin' | 'player' {
+  const normalized = name.trim().toLowerCase()
+  if (ADMIN_NAMES.includes(normalized)) {
+    return 'admin'
+  }
+  return 'player'
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(() => {
     try {
       const stored = window.localStorage.getItem(STORAGE_KEY)
       if (!stored) return null
-      return JSON.parse(stored) as AuthUser
+      const parsed = JSON.parse(stored) as Partial<AuthUser>
+      if (!parsed.name) return null
+      return {
+        id: parsed.id ?? `user_${Date.now()}`,
+        name: parsed.name,
+        initials: parsed.initials ?? computeInitials(parsed.name),
+        role: parsed.role ?? resolveRoleFromName(parsed.name),
+      }
     } catch {
       return null
     }
@@ -52,10 +70,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = (name: string) => {
     const trimmed = name.trim()
     if (!trimmed) return
+    const role = resolveRoleFromName(trimmed)
     const next: AuthUser = {
       id: `user_${Date.now()}`,
       name: trimmed,
       initials: computeInitials(trimmed),
+      role,
     }
     setUser(next)
   }

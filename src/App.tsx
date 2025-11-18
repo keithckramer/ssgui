@@ -1,5 +1,6 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 
+import AdminProtected from '@/app/AdminProtected'
 import { AuthProvider } from '@/app/AuthContext'
 import Layout from '@/app/Layout'
 import Protected from '@/app/Protected'
@@ -31,7 +32,14 @@ function App() {
                 }
               />
               <Route path={routes.login} element={<Login />} />
-              <Route path={routes.admin} element={<Admin />} />
+              <Route
+                path={routes.admin}
+                element={
+                  <AdminProtected>
+                    <Admin />
+                  </AdminProtected>
+                }
+              />
               <Route path={routes.board} element={<BoardPage />} />
             </Route>
             <Route path="*" element={<NotFound />} />

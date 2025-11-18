@@ -68,7 +68,8 @@ export default function Login() {
       {user && (
         <p className="text-xs text-slate-500">
           You are currently logged in as{' '}
-          <span className="font-semibold text-slate-200">{user.name}</span>.
+          <span className="font-semibold text-slate-200">{user.name}</span>{' '}
+          (<span className="font-mono text-slate-300">{user.role}</span>).
           You can change this by entering a new name.
         </p>
       )}
